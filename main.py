@@ -1,16 +1,20 @@
-# This is a sample Python script.
+from cityvillage import City, Village, CityVillageGraph
+import igraph
+import random
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+random.seed(42)
+def run_simulation():
+    villages = [Village(number_nodes=10, name=f"village_{i}") for i in range(10)]
+    city = City(number_nodes=40)
+    graph = CityVillageGraph()
+    graph = graph.add_location(city)
+    for village in villages:
+        graph = graph.add_location(village)
+    out = igraph.plot(graph.get_igraph_representation(), target='test.png',
+                      bbox=(800, 800),
+                      margin=50,
+                      vertex_label=None, edge_width=1, edge_color='black')
+    out.save("test.png")
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    run_simulation()
