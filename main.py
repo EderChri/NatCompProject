@@ -13,7 +13,7 @@ def run_simulation():
     graph = graph.add_locations(city, villages)
     colormap = plt.cm.viridis
 
-    while not graph.all_infected():
+    while not graph.all_informed():
         not_interested, spreading, ignorant = graph.spread_information()
         node_colors = [colormap(value) for value in ["spreading", "not_interested", "ignorant"]]
         out = igraph.plot(graph.get_igraph_representation(), target='test.png',
