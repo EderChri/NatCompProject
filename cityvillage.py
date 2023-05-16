@@ -84,7 +84,7 @@ class CityVillageGraph(Graph):
         return igraph
     
     def all_infected(self):
-        if all(i == 'not-interested' for i in self.vs['state']):
+        if all(i == 'not_interested' for i in self.vs['state']):
             infected = True
         else:
             infected = False
