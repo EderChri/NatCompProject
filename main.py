@@ -11,11 +11,12 @@ def run_simulation():
     city = City(number_nodes=40)
     graph = CityVillageGraph()
     graph = graph.add_locations(city, villages)
-    colormap = plt.cm.viridis
+    colormap = {"spreading": "red", "not_interested": "blue", "ignorant": "yellow"}
+
 
     while not graph.all_informed():
         not_interested, spreading, ignorant = graph.spread_information()
-        node_colors = [colormap(value) for value in ["spreading", "not_interested", "ignorant"]]
+        node_colors = [colormap[state] for state in graph.vs['state']]
         out = igraph.plot(graph.get_igraph_representation(), target='test.png',
                           bbox=(800, 800),
                           margin=50,

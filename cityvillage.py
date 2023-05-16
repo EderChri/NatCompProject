@@ -1,6 +1,6 @@
 from random import random, choice
 from igraph import Graph
-
+import matplotlib.pyplot as plt
 
 class Village(Graph):
     def __init__(self, number_nodes, name, *args, **kwds):
@@ -118,4 +118,31 @@ class CityVillageGraph(Graph):
                         self.vs[neighbour]["state"] = "spreading"
 
         return [nr_not_interested, nr_spreading, self.vcount()-nr_spreading-nr_not_interested]
+
+
+    def plot_not_interested_over_time(self, spread_prob=0.25):
+        self.vs[0]["state"] = "spreading"
+
+        not_interested_counts = [] 
+
+        while not self.all_informed():
+            count = self.spread_information(spread_prob)
+            not_interested_counts.append(count[0]) 
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(not_interested_counts, label='Not Interested')
+        plt.title('Number of Not Interested Nodes Over Time')
+        plt.xlabel('Iteration')
+        plt.ylabel('Number of Not Interested Nodes')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig('output.png')
+        plt.show()
+        
+
+
+
+
+
+
 
