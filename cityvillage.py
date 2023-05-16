@@ -31,44 +31,35 @@ class CityVillageGraph(Graph):
     def __init__(self, number_connections=3, *args, **kwds):
         super().__init__(*args, **kwds)
         self.nr_connections = number_connections
+        self.city = None
+        self.villages = None
 
-    def __add__(self, other):
-        # Needed so the igraph.Graph addition works
-        # But the class properties are kept as well
-        tmp_vil = self.villages
-        tmp_city = self.city
-        tmp_nr_con = self.nr_connections
-        self = super().__add__(other)
-        self.city = tmp_city
-        self.villages = tmp_vil
-        self.nr_connections = tmp_nr_con
-        return self
-
-    def add_location(self, location):
+    def add_locations(self, city, villages):
         # If city has not been added yet, add city and
         # connections between city and village
-        if isinstance(location, City):
-            self += location
-            self.city = location
-            # add nr_connections many edges between each village and city
-            for _ in range(self.nr_connections):
-                for village in self.villages:
-                    village_node = choice(village.vs)
-                    city_node = choice(self.city.vs)
-                    self.add_edge(village_node.index, city_node.index)
+        filename = './output.txt'
+        self.city = city
+        self.villages = villages
+        self += city
+        for village in villages:
+            self += village
 
-        # Add the location to the graph
-        if isinstance(location, Village):
-            self.villages.append(location)
-            self += location
+        # add nr_connections many edges between each village and city
+        for _ in range(self.nr_connections):
+            #add number of vertexes in city to fix problem with vertex numbers in overall graph
+            idx = city.vcount()
+            for village in villages:
+                village_node = choice(village.vs)
+                city_node = choice(city.vs)
+                #possible solution: add city size and size previous villages to village_node.index
+                self.add_edge(village_node.index+idx, city_node.index)
+                #add number of vertexes in village to fix problem with vertex numbers in overall graph
+                idx = idx + village.vcount()
+                with open(filename, 'w') as f:
+                    print(city, file=f)
+                    print(village, file=f)
+                    print(self,file=f)
 
-            # If city is already set, add nr_connections many edges
-            # between the village and the city
-            if self.city is not None:
-                for _ in range(self.nr_connections):
-                    village_node = choice(location.vs)
-                    city_node = choice(self.city.vs)
-                    self.add_edge(village_node.index, city_node.index)
         return self
 
     def make_complete_graph(self):
@@ -79,4 +70,3 @@ class CityVillageGraph(Graph):
         igraph.add_vertices(self.vcount())
         igraph.add_edges(self.get_edgelist())
         return igraph
-

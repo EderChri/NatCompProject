@@ -4,12 +4,10 @@ import random
 
 random.seed(42)
 def run_simulation():
-    villages = [Village(number_nodes=10, name=f"village_{i}") for i in range(10)]
+    villages = [Village(number_nodes=10, name=f"village_{i}") for i in range(3)]
     city = City(number_nodes=40)
     graph = CityVillageGraph()
-    graph = graph.add_location(city)
-    for village in villages:
-        graph = graph.add_location(village)
+    graph = graph.add_locations(city,villages)
     out = igraph.plot(graph.get_igraph_representation(), target='test.png',
                       bbox=(800, 800),
                       margin=50,
