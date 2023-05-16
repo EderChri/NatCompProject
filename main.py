@@ -19,6 +19,8 @@ def run_simulation():
     #startpoint in village
     startpoint = city_size + random.randint(0, village_size*nr_villages) - 1
     graph.vs[startpoint]['state'] = 'spreading'
+    not_interested_counts = [] 
+
     count = 0 #used to debug while loop
     while not graph.all_informed():
         not_interested, spreading, ignorant = graph.spread_information()
@@ -29,12 +31,22 @@ def run_simulation():
                           vertex_label=None, edge_width=1, edge_color='black',
                           vertex_color=node_colors)
         out.save("test.png")
+        not_interested_counts.append(not_interested) 
+
         #used to debug while loop -> overall works, but sometimes error incident function gives non existent node which is larger than the amount of nodes and not a neighbour
         print(graph.vs['state'])
         count = count + 1
         if count == 3:
             break
 
-
+        plt.figure(figsize=(10, 6))
+        plt.plot(not_interested_counts, label='Not Interested')
+        plt.title('Number of Not Interested Nodes Over Time')
+        plt.xlabel('Iteration')
+        plt.ylabel('Number of Not Interested Nodes')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig('output.png')
+    
 if __name__ == '__main__':
     run_simulation()
