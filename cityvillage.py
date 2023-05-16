@@ -83,12 +83,12 @@ class CityVillageGraph(Graph):
         igraph.add_edges(self.get_edgelist())
         return igraph
     
-    def all_infected(self):
+    def all_informed(self):
         if all(i == 'not_interested' for i in self.vs['state']):
-            infected = True
+            informed = True
         else:
-            infected = False
-        return infected
+            informed = False
+        return informed
 
     def spread_information(self, spread_prob=0.25):
 
