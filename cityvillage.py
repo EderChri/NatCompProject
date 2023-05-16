@@ -91,7 +91,7 @@ class CityVillageGraph(Graph):
             informed = False
         return informed
 
-    def spread_information(self, spread_prob=0.9):
+    def spread_information(self, spread_prob=0.4):
 
         nr_not_interested = 0
         nr_spreading = 0
@@ -107,7 +107,6 @@ class CityVillageGraph(Graph):
                 nr_not_interested += 1
                 continue
 
-            # sometimes the function below gives a neighbour value which is larger than the amount of vertices and not a neighbour
             neigh_idxs = self.neighborhood(self.vs[node_idx], order=1, mindist=1)
             if all(self.vs[neigh]["state"] == "spreading" or
                    self.vs[neigh]["state"] == "not_interested" for neigh in neigh_idxs) and \
@@ -123,13 +122,4 @@ class CityVillageGraph(Graph):
                         self.vs[neighbour]["action"] = True
                         self.vs[neighbour]["state"] = "spreading"
 
-        return [nr_not_interested, nr_spreading, self.vcount()-nr_spreading-nr_not_interested]
-
-        
-
-
-
-
-
-
-
+        return [nr_not_interested, nr_spreading, self.vcount() - nr_spreading - nr_not_interested]
