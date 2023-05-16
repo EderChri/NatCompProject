@@ -2,6 +2,7 @@ from random import random, choice
 from igraph import Graph
 import matplotlib.pyplot as plt
 
+
 class Village(Graph):
     def __init__(self, number_nodes, name, *args, **kwds):
         super().__init__(*args, **kwds)
@@ -83,7 +84,7 @@ class CityVillageGraph(Graph):
         igraph.add_vertices(self.vcount())
         igraph.add_edges(self.get_edgelist())
         return igraph
-    
+
     def all_informed(self):
         if all(i == 'not_interested' for i in self.vs['state']):
             informed = True
@@ -98,8 +99,6 @@ class CityVillageGraph(Graph):
         self.vs["action"] = False
 
         for node_idx in self.vs.indices:
-            print(node_idx)
-            
 
             # Node has nothing to share
             if self.vs[node_idx]["state"] == "ignorant":
@@ -109,16 +108,15 @@ class CityVillageGraph(Graph):
                 nr_not_interested += 1
                 continue
 
-            #sometimes the function below gives a neighbour value which is larger than the amount of vertices and not a neighbour
+            # sometimes the function below gives a neighbour value which is larger than the amount of vertices and not a neighbour
             neigh_idxs = self.neighborhood(self.vs[node_idx], order=1, mindist=1)
-            print(neigh_idxs)
             if all(self.vs[neigh]["state"] == "spreading" or
                    self.vs[neigh]["state"] == "not_interested" for neigh in neigh_idxs) and \
                     not self.vs[node_idx]["action"]:
                 self.vs[node_idx]["state"] = "not_interested"
                 self.vs[node_idx]["action"] = True
                 nr_not_interested += 1
-          
+
             for neighbour in neigh_idxs:
                 if self.vs[neighbour]["state"] == "ignorant":
                     if random() < spread_prob and not self.vs[neighbour]["action"]:
@@ -126,17 +124,16 @@ class CityVillageGraph(Graph):
                         self.vs[neighbour]["action"] = True
                         self.vs[neighbour]["state"] = "spreading"
 
-        return [nr_not_interested, nr_spreading, self.vcount()-nr_spreading-nr_not_interested]
-
+        return [nr_not_interested, nr_spreading, self.vcount() - nr_spreading - nr_not_interested]
 
     def plot_not_interested_over_time(self, spread_prob=0.25):
         self.vs[0]["state"] = "spreading"
 
-        not_interested_counts = [] 
+        not_interested_counts = []
 
         while not self.all_informed():
             count = self.spread_information(spread_prob)
-            not_interested_counts.append(count[0]) 
+            not_interested_counts.append(count[0])
 
         plt.figure(figsize=(10, 6))
         plt.plot(not_interested_counts, label='Not Interested')
@@ -147,11 +144,3 @@ class CityVillageGraph(Graph):
         plt.grid(True)
         plt.savefig('output.png')
         plt.show()
-        
-
-
-
-
-
-
-
