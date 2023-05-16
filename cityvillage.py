@@ -71,6 +71,7 @@ class CityVillageGraph(Graph):
                     print(self, file=f)
 
         self.vs["state"] = "ignorant"
+        self.vs["action"] = False
         return self
 
     def make_complete_graph(self):
@@ -93,6 +94,7 @@ class CityVillageGraph(Graph):
 
         nr_not_interested = 0
         nr_spreading = 0
+        self.vs["action"] = False
 
         for node_idx in self.vs.indices:
             print(node_idx)
@@ -107,16 +109,20 @@ class CityVillageGraph(Graph):
                 continue
 
             #sometimes the function below gives a neighbour value which is larger than the amount of vertices and not a neighbour
-            neigh_idxs = self.incident(self.vs[node_idx], mode="out")
+            neigh_idxs = self.neighborhood(self.vs[node_idx], order=1, mindist=1)
             print(neigh_idxs)
-            if all(self.vs[neigh]["state"] == "spreading" or self.vs[neigh]["state"] == "not_interested" for neigh in neigh_idxs):
+            if all(self.vs[neigh]["state"] == "spreading" or
+                   self.vs[neigh]["state"] == "not_interested" for neigh in neigh_idxs) and \
+                    not self.vs[node_idx]["action"]:
                 self.vs[node_idx]["state"] = "not_interested"
+                self.vs[node_idx]["action"] = True
                 nr_not_interested += 1
           
             for neighbour in neigh_idxs:
                 if self.vs[neighbour]["state"] == "ignorant":
-                    if random() < spread_prob:
+                    if random() < spread_prob and not self.vs[neighbour]["action"]:
                         nr_spreading += 1
+                        self.vs[neighbour]["action"] = True
                         self.vs[neighbour]["state"] = "spreading"
 
         return [nr_not_interested, nr_spreading, self.vcount()-nr_spreading-nr_not_interested]
