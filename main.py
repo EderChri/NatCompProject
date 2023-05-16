@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import imageio
 from os import listdir
 from os.path import isfile, join
-import glob, os.path
+import glob
+from pathlib import Path
 
 
 def run_simulation():
@@ -69,6 +70,7 @@ def plot_graph(graph, number, colormap):
 
 
 def cleanup_directory():
+    Path("img").mkdir(parents=True, exist_ok=True)
     filelist = glob.glob(os.path.join('img', "*.png"))
     for f in filelist:
         os.remove(f)
