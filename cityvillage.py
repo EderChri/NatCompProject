@@ -90,12 +90,15 @@ class CityVillageGraph(Graph):
             informed = False
         return informed
 
-    def spread_information(self, spread_prob=0.25):
+    def spread_information(self, spread_prob=0.9):
 
         nr_not_interested = 0
         nr_spreading = 0
 
         for node_idx in self.vs.indices:
+            print(node_idx)
+            
+
             # Node has nothing to share
             if self.vs[node_idx]["state"] == "ignorant":
                 continue
@@ -104,14 +107,14 @@ class CityVillageGraph(Graph):
                 nr_not_interested += 1
                 continue
 
-            neigh_idxs = self.incident(self.vs[node_idx]["name"], mode="out")
-
-            if all(self.vs[neigh_idxs]["state"] == "spreading" or self.vs[neigh_idxs]["state"] == "not_interested"):
+            #sometimes the function below gives a neighbour value which is larger than the amount of vertices and not a neighbour
+            neigh_idxs = self.incident(self.vs[node_idx], mode="out")
+            print(neigh_idxs)
+            if all(self.vs[neigh]["state"] == "spreading" or self.vs[neigh]["state"] == "not_interested" for neigh in neigh_idxs):
                 self.vs[node_idx]["state"] = "not_interested"
                 nr_not_interested += 1
-
+          
             for neighbour in neigh_idxs:
-
                 if self.vs[neighbour]["state"] == "ignorant":
                     if random() < spread_prob:
                         nr_spreading += 1
