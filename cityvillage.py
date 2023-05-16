@@ -71,6 +71,7 @@ class CityVillageGraph(Graph):
                     print(village, file=f)
                     print(self, file=f)
 
+        self.vs["state"] = "ignorant"
         return self
 
     def make_complete_graph(self):
@@ -81,3 +82,33 @@ class CityVillageGraph(Graph):
         igraph.add_vertices(self.vcount())
         igraph.add_edges(self.get_edgelist())
         return igraph
+
+    def spread_information(self, spread_prob=0.25):
+
+        nr_not_interested = 0
+        nr_spreading = 0
+
+        for node_idx in self.vs.indices:
+            # Node has nothing to share
+            if self.vs[node_idx]["state"] == "ignorant":
+                continue
+
+            if self.vs[node_idx]["state"] == "not_interested":
+                nr_not_interested += 1
+                continue
+
+            neigh_idxs = self.incident(self.vs[node_idx]["name"], mode="out")
+
+            if all(self.vs[neigh_idxs]["state"] == "spreading" or self.vs[neigh_idxs]["state"] == "not_interested"):
+                self.vs[node_idx]["state"] = "not_interested"
+                nr_not_interested += 1
+
+            for neighbour in neigh_idxs:
+
+                if self.vs[neighbour]["state"] == "ignorant":
+                    if random() < spread_prob:
+                        nr_spreading += 1
+                        self.vs[neighbour]["state"] = "spreading"
+
+        return [nr_not_interested, nr_spreading, self.vcount()-nr_spreading-nr_not_interested]
+
