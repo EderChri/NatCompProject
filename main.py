@@ -20,7 +20,7 @@ class SimSettings:
     city_size = 40
     village_size = 10
     nr_villages = 5
-    spreading = .3
+    spreading_prob = .3
     time_out = True
     decay = False
     spreading_time = 2
@@ -77,9 +77,9 @@ def run_simulation():
     while not graph.not_spreading() and count < 30:
         plot_graph(graph, count, colormap)
         count = count + 1
-        not_interested, spreading, ignorant = graph.spread_information(cfg.spreading)
+        not_interested, spreading, ignorant = graph.spread_information(cfg.spreading_prob)
         if cfg.decay:
-            cfg.spreading = cfg.spreading * np.exp(-2 * count)
+            cfg.spreading_prob = cfg.spreading_prob * np.exp(-2 * count)
         not_interested_counts.append(not_interested)
         spreading_counts.append(spreading)
         ignorant_counts.append(ignorant)
@@ -98,9 +98,9 @@ def generate_gif():
 
 def plot_statistics(not_interested_counts, spreading_counts, ignorant_counts):
     plt.figure(figsize=(10, 6))
-    plt.plot(ignorant_counts, label='Ignorant')
-    plt.plot(spreading_counts, label='Spreading')
-    plt.plot(not_interested_counts, label='Not Interested')
+    plt.plot(ignorant_counts, label='Ignorant', c='yellow')
+    plt.plot(spreading_counts, label='Spreading', c='red')
+    plt.plot(not_interested_counts, label='Not Interested', c='darkblue')
     plt.title('Number Of Nodes For Each State Over Time')
     plt.xlabel('Iteration')
     plt.ylabel('Number of Nodes')
