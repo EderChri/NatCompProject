@@ -64,9 +64,9 @@ def generate_gif():
 
 def plot_statistics(not_interested_counts, spreading_counts, ignorant_counts):
     plt.figure(figsize=(10, 6))
-    plt.plot(ignorant_counts, label='Ignorant')
-    plt.plot(spreading_counts, label='Spreading')
-    plt.plot(not_interested_counts, label='Not Interested')
+    plt.plot(ignorant_counts, label='Ignorant', c='yellow')
+    plt.plot(spreading_counts, label='Spreading', c='red')
+    plt.plot(not_interested_counts, label='Not Interested', c='darkblue')
     plt.title('Number Of Nodes For Each State Over Time')
     plt.xlabel('Iteration')
     plt.ylabel('Number of Nodes')
