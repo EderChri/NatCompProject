@@ -12,6 +12,7 @@ from os import listdir
 from os.path import isfile, join
 import glob
 from pathlib import Path
+import sys
 
 
 @dataclass
@@ -23,6 +24,9 @@ class SimSettings:
     time_out = True
     decay = False
     spreading_time = 2
+    num_startpoints = 5
+    start_village = True
+    seed = 42
 
 
 def run_simulation():
@@ -33,9 +37,39 @@ def run_simulation():
     graph = graph.add_locations(city, villages)
     colormap = {"spreading": "red", "not_interested": "blue", "ignorant": "yellow"}
 
-    # startpoint in village
-    startpoint = cfg.city_size + random.randint(0, cfg.village_size * cfg.nr_villages) - 1
-    graph.vs[startpoint]['state'] = 'spreading'
+    # create startpoints
+    startpoint_loc = []
+    startpoints = []
+    if cfg.num_startpoints == 1:
+        if cfg.start_village:
+            startpoint_loc = [True]
+        else:
+            startpoint_loc = [False]
+    else:
+        #make list of whether startpoints are in city or village if there are multiple points
+        for i in range(cfg.num_startpoints):
+            random.seed(cfg.seed+i)
+            startpoint_loc.append(random.choice([True, False]))
+
+    #get startpoints based on locations
+    for i in range(cfg.num_startpoints):
+        random.seed(cfg.seed+i)
+        if startpoint_loc[i]:
+            #WARNING make sure that the city and village size is larger than the amount of starting points
+            #check if startpoint is already present
+            while True:
+                if (cfg.city_size + random.randint(0, cfg.village_size * cfg.nr_villages)) not in startpoints:
+                    startpoints.append(cfg.city_size + random.randint(0, cfg.village_size * cfg.nr_villages))
+                    break
+        else:
+            while True:
+                if random.randint(0, cfg.city_size) not in startpoints:
+                    startpoints.append(random.randint(0, cfg.city_size))
+                    break
+
+    for startpoint in startpoints:
+        graph.vs[startpoint]['state'] = 'spreading'
+
     not_interested_counts = []
     spreading_counts = []
     ignorant_counts = []
