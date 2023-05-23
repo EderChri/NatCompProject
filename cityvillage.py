@@ -29,11 +29,13 @@ class CityVillageGraph(Graph):
     villages = []
     city = None
 
-    def __init__(self, number_connections=3, *args, **kwds):
+    def __init__(self, number_connections=3, spreading_time=5, time_out=True, *args, **kwds):
         super().__init__(*args, **kwds)
         self.nr_connections = number_connections
+        self.time_out = time_out
         self.city = None
         self.villages = None
+        self.spreading_time = spreading_time
 
     def __add__(self, other):
         # Needed so the igraph.Graph addition works
@@ -41,10 +43,14 @@ class CityVillageGraph(Graph):
         tmp_vil = self.villages
         tmp_city = self.city
         tmp_nr_con = self.nr_connections
+        tmp_spreading_time = self.spreading_time
+        tmp_time_out = self.time_out
         self = super().__add__(other)
         self.city = tmp_city
         self.villages = tmp_vil
         self.nr_connections = tmp_nr_con
+        self.spreading_time = tmp_spreading_time
+        self.time_out = tmp_time_out
         return self
 
     def add_locations(self, city, villages):
@@ -76,6 +82,7 @@ class CityVillageGraph(Graph):
 
         self.vs["state"] = "ignorant"
         self.vs["action"] = False
+        self.vs["time"] = self.spreading_time
         return self
 
     def make_complete_graph(self):
@@ -111,9 +118,15 @@ class CityVillageGraph(Graph):
                 continue
 
             neigh_idxs = self.neighborhood(self.vs[node_idx], order=1, mindist=1)
-            if all(self.vs[neigh]["state"] == "spreading" or
-                   self.vs[neigh]["state"] == "not_interested" for neigh in neigh_idxs) and \
+            # only reduce when using iterations to change from spreading to not interested
+            if self.time_out:
+                self.vs[node_idx]["time"] -= 1
+            if (all(self.vs[neigh]["state"] == "spreading" or
+                    self.vs[neigh]["state"] == "not_interested" for neigh in neigh_idxs) or self.vs[node_idx][
+                    "time"] <= 0) and \
                     not self.vs[node_idx]["action"]:
+                if(self.vs[node_idx]["time"] == 0):
+                    print("here")
                 self.vs[node_idx]["state"] = "not_interested"
                 self.vs[node_idx]["action"] = True
                 nr_not_interested += 1

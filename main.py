@@ -1,4 +1,5 @@
 import os.path
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -13,19 +14,27 @@ import glob
 from pathlib import Path
 
 
-def run_simulation():
+@dataclass
+class SimSettings:
     city_size = 40
     village_size = 10
     nr_villages = 5
-    spreading = 1
-    villages = [Village(number_nodes=village_size, name=f"village_{i}") for i in range(nr_villages)]
-    city = City(number_nodes=city_size)
-    graph = CityVillageGraph()
+    spreading = .3
+    time_out = True
+    decay = False
+    spreading_time = 2
+
+
+def run_simulation():
+    cfg = SimSettings()
+    villages = [Village(number_nodes=cfg.village_size, name=f"village_{i}") for i in range(cfg.nr_villages)]
+    city = City(number_nodes=cfg.city_size)
+    graph = CityVillageGraph(time_out=cfg.time_out, spreading_time=cfg.spreading_time)
     graph = graph.add_locations(city, villages)
     colormap = {"spreading": "red", "not_interested": "blue", "ignorant": "yellow"}
 
     # startpoint in village
-    startpoint = city_size + random.randint(0, village_size * nr_villages) - 1
+    startpoint = cfg.city_size + random.randint(0, cfg.village_size * cfg.nr_villages) - 1
     graph.vs[startpoint]['state'] = 'spreading'
     not_interested_counts = []
     spreading_counts = []
@@ -34,8 +43,9 @@ def run_simulation():
     while not graph.not_spreading() and count < 30:
         plot_graph(graph, count, colormap)
         count = count + 1
-        not_interested, spreading, ignorant = graph.spread_information(spreading)
-        spreading = spreading * np.exp(-2 * count)
+        not_interested, spreading, ignorant = graph.spread_information(cfg.spreading)
+        if cfg.decay:
+            cfg.spreading = cfg.spreading * np.exp(-2 * count)
         not_interested_counts.append(not_interested)
         spreading_counts.append(spreading)
         ignorant_counts.append(ignorant)
@@ -75,6 +85,7 @@ def plot_graph(graph, number, colormap):
                 vertex_color=node_colors)
     plt.savefig(f"img/graph_{number}.png")
     plt.close()
+
 
 def cleanup_directory():
     Path("img").mkdir(parents=True, exist_ok=True)
