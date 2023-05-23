@@ -48,6 +48,7 @@ def run_simulation():
     else:
         #make list of whether startpoints are in city or village if there are multiple points
         for i in range(cfg.num_startpoints):
+            #control that the same value is not taken all the time
             random.seed(cfg.seed+i)
             startpoint_loc.append(random.choice([True, False]))
 
