@@ -125,8 +125,6 @@ class CityVillageGraph(Graph):
                     self.vs[neigh]["state"] == "not_interested" for neigh in neigh_idxs) or self.vs[node_idx][
                     "time"] <= 0) and \
                     not self.vs[node_idx]["action"]:
-                if(self.vs[node_idx]["time"] == 0):
-                    print("here")
                 self.vs[node_idx]["state"] = "not_interested"
                 self.vs[node_idx]["action"] = True
                 nr_not_interested += 1
