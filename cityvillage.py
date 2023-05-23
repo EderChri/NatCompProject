@@ -11,7 +11,7 @@ class Village(Graph):
         for _ in range(number_nodes):
             self.add_vertex()
             new_vertex_id = self.vcount() - 1
-            edges = [(new_vertex_id, i) for i in range(self.vcount() - 1)]
+            edges = [(new_vertex_id, i) for i in range(self.vcount() - 1) if random() <= 0.25] #to make it run with the same probability
             self.add_edges(edges)
 
 
