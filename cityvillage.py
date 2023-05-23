@@ -1,4 +1,6 @@
 from random import random, choice
+
+import numpy as np
 from igraph import Graph
 
 
@@ -55,21 +57,22 @@ class CityVillageGraph(Graph):
         for village in villages:
             self += village
 
+        # add number of vertexes in city to fix problem with vertex numbers in overall graph
+        idx = city.vcount()
         # add nr_connections many edges between each village and city
-        for _ in range(self.nr_connections):
-            # add number of vertexes in city to fix problem with vertex numbers in overall graph
-            idx = city.vcount()
-            for village in villages:
+        for village in villages:
+            number_connections = int(abs(np.random.normal(self.nr_connections - 1))) + 1
+            for _ in range(number_connections):
                 village_node = choice(village.vs)
                 city_node = choice(city.vs)
                 # possible solution: add city size and size previous villages to village_node.index
                 self.add_edge(village_node.index + idx, city_node.index)
                 # add number of vertexes in village to fix problem with vertex numbers in overall graph
-                idx = idx + village.vcount()
                 with open(filename, 'w') as f:
                     print(city, file=f)
                     print(village, file=f)
                     print(self, file=f)
+            idx = idx + village.vcount()
 
         self.vs["state"] = "ignorant"
         self.vs["action"] = False
@@ -84,12 +87,12 @@ class CityVillageGraph(Graph):
         igraph.add_edges(self.get_edgelist())
         return igraph
 
-    def all_informed(self):
-        if all(i == 'not_interested' for i in self.vs['state']):
-            informed = True
+    def not_spreading(self):
+        if all(i != 'spreading' for i in self.vs['state']):
+            not_spreading = True
         else:
-            informed = False
-        return informed
+            not_spreading = False
+        return not_spreading
 
     def spread_information(self, spread_prob=0.4):
 

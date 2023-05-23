@@ -1,5 +1,7 @@
 import os.path
 
+import numpy as np
+
 from cityvillage import City, Village, CityVillageGraph
 import igraph
 import random
@@ -15,6 +17,7 @@ def run_simulation():
     city_size = 40
     village_size = 10
     nr_villages = 5
+    spreading = 1
     villages = [Village(number_nodes=village_size, name=f"village_{i}") for i in range(nr_villages)]
     city = City(number_nodes=city_size)
     graph = CityVillageGraph()
@@ -28,10 +31,11 @@ def run_simulation():
     spreading_counts = []
     ignorant_counts = []
     count = 0  # for naming the graph images
-    while not graph.all_informed():
+    while not graph.not_spreading() and count < 30:
         plot_graph(graph, count, colormap)
         count = count + 1
-        not_interested, spreading, ignorant = graph.spread_information()
+        not_interested, spreading, ignorant = graph.spread_information(spreading)
+        spreading = spreading * np.exp(-2 * count)
         not_interested_counts.append(not_interested)
         spreading_counts.append(spreading)
         ignorant_counts.append(ignorant)
@@ -47,6 +51,7 @@ def generate_gif():
         images.append(imageio.v2.imread(os.path.join('img', filename)))
     imageio.mimsave('information_spread.gif', images, duration=1000, format="GIF")
 
+
 def plot_statistics(not_interested_counts, spreading_counts, ignorant_counts):
     plt.figure(figsize=(10, 6))
     plt.plot(ignorant_counts, label='Ignorant')
@@ -58,6 +63,8 @@ def plot_statistics(not_interested_counts, spreading_counts, ignorant_counts):
     plt.legend()
     plt.grid(True)
     plt.savefig('overview_over_information_spread.png')
+
+
 def plot_graph(graph, number, colormap):
     fig, ax = plt.subplots()
     node_colors = [colormap[state] for state in graph.vs['state']]
@@ -67,7 +74,7 @@ def plot_graph(graph, number, colormap):
                 vertex_label=None, edge_width=1, edge_color='black',
                 vertex_color=node_colors)
     plt.savefig(f"img/graph_{number}.png")
-
+    plt.close()
 
 def cleanup_directory():
     Path("img").mkdir(parents=True, exist_ok=True)
