@@ -25,7 +25,8 @@ class SimSettings:
     decay = False
     spreading_time = 2
     num_startpoints = 5
-    start_village = True
+    only_villages = False
+    only_cities = False
     seed = 42
 
 
@@ -40,14 +41,13 @@ def run_simulation():
     # create startpoints
     startpoint_loc = []
     startpoints = []
-    if cfg.num_startpoints == 1:
-        if cfg.start_village:
-            startpoint_loc = [True]
+    #make list of whether startpoints are in city or village if there are multiple points
+    for i in range(cfg.num_startpoints): 
+        if cfg.only_villages:
+            startpoint_loc.append(True)
+        elif cfg.only_cities:
+            startpoint_loc.append(False)
         else:
-            startpoint_loc = [False]
-    else:
-        #make list of whether startpoints are in city or village if there are multiple points
-        for i in range(cfg.num_startpoints):
             #control that the same value is not taken all the time
             random.seed(cfg.seed+i)
             startpoint_loc.append(random.choice([True, False]))
