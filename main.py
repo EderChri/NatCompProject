@@ -19,7 +19,7 @@ class SimSettings:
     city_size = 40
     village_size = 10
     nr_villages = 5
-    spreading = .3
+    spreading_prob = .3
     time_out = True
     decay = False
     spreading_time = 2
@@ -43,9 +43,9 @@ def run_simulation():
     while not graph.not_spreading() and count < 30:
         plot_graph(graph, count, colormap)
         count = count + 1
-        not_interested, spreading, ignorant = graph.spread_information(cfg.spreading)
+        not_interested, spreading, ignorant = graph.spread_information(cfg.spreading_prob)
         if cfg.decay:
-            cfg.spreading = cfg.spreading * np.exp(-2 * count)
+            cfg.spreading_prob = cfg.spreading_prob * np.exp(-2 * count)
         not_interested_counts.append(not_interested)
         spreading_counts.append(spreading)
         ignorant_counts.append(ignorant)
