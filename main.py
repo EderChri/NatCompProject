@@ -21,8 +21,8 @@ class SimSettings:
     village_size = 10
     nr_villages = 5
     spreading_prob = .3
-    time_out = True
-    decay = False
+    time_out = False
+    decay = True
     spreading_time = 2
     num_startpoints = 5
     only_villages = False
@@ -71,16 +71,16 @@ def run_simulation():
     for startpoint in startpoints:
         graph.vs[startpoint]['state'] = 'spreading'
 
-    not_interested_counts = []
-    spreading_counts = []
-    ignorant_counts = []
+    not_interested_counts = [0]
+    spreading_counts = [cfg.num_startpoints]
+    ignorant_counts = [cfg.nr_villages*cfg.village_size + cfg.city_size - cfg.num_startpoints]
     count = 0  # for naming the graph images
     while not graph.not_spreading() and count < 30:
         plot_graph(graph, count, colormap)
         count = count + 1
         not_interested, spreading, ignorant = graph.spread_information(cfg.spreading_prob)
         if cfg.decay:
-            cfg.spreading_prob = cfg.spreading_prob * np.exp(-2 * count)
+            cfg.spreading_prob = cfg.spreading_prob * np.exp(-0.1 * count)
         not_interested_counts.append(not_interested)
         spreading_counts.append(spreading)
         ignorant_counts.append(ignorant)
