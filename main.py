@@ -11,7 +11,9 @@ from os import listdir
 from os.path import isfile, join
 import glob
 from pathlib import Path
-
+import copy
+import tqdm
+import pandas as pd
 
 @dataclass
 class SimSettings:
@@ -26,8 +28,8 @@ class SimSettings:
     time_out = False
     decay = True
     spreading_time = 2
-    num_start_points = 5
-    only_villages = False
+    num_start_points = 1
+    only_villages = True
     only_cities = False
     seed = 42
     connect_prob_city = 0.5
@@ -212,7 +214,7 @@ def sim_wrapper(config, return_list, change_parameter, param_name):
     :return: List of dictionaries with the outcome of this experiment added
     """
     sim_cfg = copy.deepcopy(config)
-    for param in tqdm(change_parameter):
+    for param in tqdm.tqdm(change_parameter):
         setattr(sim_cfg, param_name, param)
         time = run_simulation(sim_cfg)
         return_list.append(get_row_dict(sim_cfg, time))
