@@ -1,4 +1,3 @@
-import copy
 import os.path
 from dataclasses import dataclass
 
@@ -12,8 +11,6 @@ from os import listdir
 from os.path import isfile, join
 import glob
 from pathlib import Path
-import pandas as pd
-from tqdm import tqdm
 
 
 @dataclass
