@@ -35,6 +35,7 @@ class SimSettings:
     seed = 42
     connect_prob_city = 0.5
     connect_prob_vil = 0.5
+    decay_param = -0.075
 
 
 @dataclass
@@ -116,7 +117,7 @@ def run_simulation(config: SimSettings, plot=False):
                                                                        nr_spreading=spreading,
                                                                        spread_prob=spreading_prob)
         if config.decay:
-            spreading_prob = spreading_prob * np.exp(-0.075 * count)
+            spreading_prob = spreading_prob * np.exp(config.decay_param * count)
         not_interested_counts.append(not_interested)
         spreading_counts.append(spreading)
         ignorant_counts.append(ignorant)
