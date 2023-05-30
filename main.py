@@ -3,16 +3,14 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from cityvillage import City, Village, CityVillageGraph
+from cityvillage import Dwelling, CityVillageGraph
 import igraph
-import random
 import matplotlib.pyplot as plt
 import imageio
 from os import listdir
 from os.path import isfile, join
 import glob
 from pathlib import Path
-import sys
 
 
 @dataclass
@@ -32,11 +30,10 @@ class SimSettings:
     connect_prob_vil = 0.5
 
 
-def run_simulation():
-    cfg = SimSettings()
-    villages = [Village(number_nodes=cfg.village_size, name=f"village_{i}", prob=cfg.connect_prob_vil)
-                for i in range(cfg.nr_villages)]
-    city = City(number_nodes=cfg.city_size, prob=cfg.connect_prob_city)
+def run_simulation(cfg: SimSettings):
+    villages = [Dwelling(number_nodes=cfg.village_size, prob=cfg.connect_prob_vil)
+                for _ in range(cfg.nr_villages)]
+    city = Dwelling(number_nodes=cfg.city_size, prob=cfg.connect_prob_city)
     graph = CityVillageGraph(time_out=cfg.time_out, spreading_time=cfg.spreading_time)
     graph = graph.add_locations(city, villages)
     colormap = {"spreading": "red", "not_interested": "blue", "ignorant": "yellow"}
@@ -52,23 +49,23 @@ def run_simulation():
             startpoint_loc.append(False)
         else:
             # control that the same value is not taken all the time
-            random.seed(cfg.seed + i)
-            startpoint_loc.append(random.choice([True, False]))
+            np.random.seed(cfg.seed + i)
+            startpoint_loc.append(np.random.choice([True, False]))
 
     # get startpoints based on locations
     for i in range(cfg.num_startpoints):
-        random.seed(cfg.seed + i)
+        np.random.seed(cfg.seed + i)
         if startpoint_loc[i]:
             # WARNING make sure that the city and village size is larger than the amount of starting points
             # check if startpoint is already present
             while True:
-                if (cfg.city_size + random.randint(0, cfg.village_size * cfg.nr_villages)) not in startpoints:
-                    startpoints.append(cfg.city_size + random.randint(0, cfg.village_size * cfg.nr_villages))
+                if (cfg.city_size + np.random.randint(0, cfg.village_size * cfg.nr_villages)) not in startpoints:
+                    startpoints.append(cfg.city_size + np.random.randint(0, cfg.village_size * cfg.nr_villages))
                     break
         else:
             while True:
-                if random.randint(0, cfg.city_size) not in startpoints:
-                    startpoints.append(random.randint(0, cfg.city_size))
+                if np.random.randint(0, cfg.city_size) not in startpoints:
+                    startpoints.append(np.random.randint(0, cfg.city_size))
                     break
 
     for startpoint in startpoints:
@@ -87,7 +84,7 @@ def run_simulation():
                                                                        nr_spreading=spreading,
                                                                        spread_prob=cfg.spreading_prob)
         if cfg.decay:
-            cfg.spreading_prob = cfg.spreading_prob * np.exp(-0.1 * count)
+            cfg.spreading_prob = cfg.spreading_prob * np.exp(-0.075 * count)
         not_interested_counts.append(not_interested)
         spreading_counts.append(spreading)
         ignorant_counts.append(ignorant)
@@ -137,7 +134,8 @@ def cleanup_directory():
 
 
 if __name__ == '__main__':
-    random.seed(42)
+    cfg = SimSettings()
+    np.random.seed(cfg.seed)
     cleanup_directory()
-    run_simulation()
+    run_simulation(cfg)
     generate_gif()

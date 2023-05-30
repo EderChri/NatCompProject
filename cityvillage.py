@@ -1,28 +1,14 @@
-from random import random, choice
-
 import numpy as np
 from igraph import Graph
 
 
-class Village(Graph):
-    def __init__(self, number_nodes, name, prob, *args, **kwds):
-        super().__init__(*args, **kwds)
-        self.name = name
-        for _ in range(number_nodes):
-            self.add_vertex()
-            new_vertex_id = self.vcount() - 1
-            edges = [(new_vertex_id, i) for i in range(self.vcount() - 1) if
-                     random() <= prob]  # to make it run with the same probability
-            self.add_edges(edges)
-
-
-class City(Graph):
+class Dwelling(Graph):
     def __init__(self, number_nodes, prob, *args, **kwds):
         super().__init__(*args, **kwds)
         for _ in range(number_nodes):
             self.add_vertex()
             new_vertex_id = self.vcount() - 1
-            edges = [(new_vertex_id, i) for i in range(self.vcount() - 1) if random() <= prob]
+            edges = [(new_vertex_id, i) for i in range(self.vcount() - 1) if np.random.random() <= prob]
             self.add_edges(edges)
 
 
@@ -70,8 +56,8 @@ class CityVillageGraph(Graph):
         for village in villages:
             number_connections = int(abs(np.random.normal(self.nr_connections - 1))) + 1
             for _ in range(number_connections):
-                village_node = choice(village.vs)
-                city_node = choice(city.vs)
+                village_node = np.random.choice(village.vs)
+                city_node = np.random.choice(city.vs)
                 # possible solution: add city size and size previous villages to village_node.index
                 self.add_edge(village_node.index + idx, city_node.index)
                 # add number of vertexes in village to fix problem with vertex numbers in overall graph
@@ -130,7 +116,7 @@ class CityVillageGraph(Graph):
 
             for neighbour in neigh_idxs:
                 if self.vs[neighbour]["state"] == "ignorant":
-                    if random() < spread_prob and not self.vs[neighbour]["action"]:
+                    if np.random.random() < spread_prob and not self.vs[neighbour]["action"]:
                         nr_spreading += 1
                         self.vs[neighbour]["action"] = True
                         self.vs[neighbour]["state"] = "spreading"
