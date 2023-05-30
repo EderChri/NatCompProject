@@ -5,23 +5,24 @@ from igraph import Graph
 
 
 class Village(Graph):
-    def __init__(self, number_nodes, name, *args, **kwds):
+    def __init__(self, number_nodes, name, prob, *args, **kwds):
         super().__init__(*args, **kwds)
         self.name = name
         for _ in range(number_nodes):
             self.add_vertex()
             new_vertex_id = self.vcount() - 1
-            edges = [(new_vertex_id, i) for i in range(self.vcount() - 1) if random() <= 0.25] #to make it run with the same probability
+            edges = [(new_vertex_id, i) for i in range(self.vcount() - 1) if
+                     random() <= prob]  # to make it run with the same probability
             self.add_edges(edges)
 
 
 class City(Graph):
-    def __init__(self, number_nodes, *args, **kwds):
+    def __init__(self, number_nodes, prob, *args, **kwds):
         super().__init__(*args, **kwds)
         for _ in range(number_nodes):
             self.add_vertex()
             new_vertex_id = self.vcount() - 1
-            edges = [(new_vertex_id, i) for i in range(self.vcount() - 1) if random() <= 0.25]
+            edges = [(new_vertex_id, i) for i in range(self.vcount() - 1) if random() <= prob]
             self.add_edges(edges)
 
 
@@ -101,10 +102,8 @@ class CityVillageGraph(Graph):
             not_spreading = False
         return not_spreading
 
-    def spread_information(self, spread_prob=0.4):
+    def spread_information(self, nr_not_interested=0, nr_spreading=0, spread_prob=0.4):
 
-        nr_not_interested = 0
-        nr_spreading = 0
         self.vs["action"] = False
 
         for node_idx in self.vs.indices:
@@ -114,7 +113,6 @@ class CityVillageGraph(Graph):
                 continue
 
             if self.vs[node_idx]["state"] == "not_interested":
-                nr_not_interested += 1
                 continue
 
             neigh_idxs = self.neighborhood(self.vs[node_idx], order=1, mindist=1)
@@ -128,6 +126,7 @@ class CityVillageGraph(Graph):
                 self.vs[node_idx]["state"] = "not_interested"
                 self.vs[node_idx]["action"] = True
                 nr_not_interested += 1
+                nr_spreading -= 1
 
             for neighbour in neigh_idxs:
                 if self.vs[neighbour]["state"] == "ignorant":

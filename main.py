@@ -28,12 +28,15 @@ class SimSettings:
     only_villages = False
     only_cities = False
     seed = 42
+    connect_prob_city = 0.5
+    connect_prob_vil = 0.5
 
 
 def run_simulation():
     cfg = SimSettings()
-    villages = [Village(number_nodes=cfg.village_size, name=f"village_{i}") for i in range(cfg.nr_villages)]
-    city = City(number_nodes=cfg.city_size)
+    villages = [Village(number_nodes=cfg.village_size, name=f"village_{i}", prob=cfg.connect_prob_vil)
+                for i in range(cfg.nr_villages)]
+    city = City(number_nodes=cfg.city_size, prob=cfg.connect_prob_city)
     graph = CityVillageGraph(time_out=cfg.time_out, spreading_time=cfg.spreading_time)
     graph = graph.add_locations(city, villages)
     colormap = {"spreading": "red", "not_interested": "blue", "ignorant": "yellow"}
@@ -41,23 +44,23 @@ def run_simulation():
     # create startpoints
     startpoint_loc = []
     startpoints = []
-    #make list of whether startpoints are in city or village if there are multiple points
-    for i in range(cfg.num_startpoints): 
+    # make list of whether startpoints are in city or village if there are multiple points
+    for i in range(cfg.num_startpoints):
         if cfg.only_villages:
             startpoint_loc.append(True)
         elif cfg.only_cities:
             startpoint_loc.append(False)
         else:
-            #control that the same value is not taken all the time
-            random.seed(cfg.seed+i)
+            # control that the same value is not taken all the time
+            random.seed(cfg.seed + i)
             startpoint_loc.append(random.choice([True, False]))
 
-    #get startpoints based on locations
+    # get startpoints based on locations
     for i in range(cfg.num_startpoints):
-        random.seed(cfg.seed+i)
+        random.seed(cfg.seed + i)
         if startpoint_loc[i]:
-            #WARNING make sure that the city and village size is larger than the amount of starting points
-            #check if startpoint is already present
+            # WARNING make sure that the city and village size is larger than the amount of starting points
+            # check if startpoint is already present
             while True:
                 if (cfg.city_size + random.randint(0, cfg.village_size * cfg.nr_villages)) not in startpoints:
                     startpoints.append(cfg.city_size + random.randint(0, cfg.village_size * cfg.nr_villages))
@@ -73,12 +76,16 @@ def run_simulation():
 
     not_interested_counts = [0]
     spreading_counts = [cfg.num_startpoints]
-    ignorant_counts = [cfg.nr_villages*cfg.village_size + cfg.city_size - cfg.num_startpoints]
+    ignorant_counts = [cfg.nr_villages * cfg.village_size + cfg.city_size - cfg.num_startpoints]
     count = 0  # for naming the graph images
+    not_interested = 0
+    spreading = cfg.num_startpoints
     while not graph.not_spreading() and count < 30:
         plot_graph(graph, count, colormap)
         count = count + 1
-        not_interested, spreading, ignorant = graph.spread_information(cfg.spreading_prob)
+        not_interested, spreading, ignorant = graph.spread_information(nr_not_interested=not_interested,
+                                                                       nr_spreading=spreading,
+                                                                       spread_prob=cfg.spreading_prob)
         if cfg.decay:
             cfg.spreading_prob = cfg.spreading_prob * np.exp(-0.1 * count)
         not_interested_counts.append(not_interested)
