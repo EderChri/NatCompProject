@@ -18,7 +18,7 @@ class SimSettings:
     city_size = 40
     village_size = 10
     nr_villages = 5
-    spreading_prob = .3
+    spreading_prob = 0.9
     time_out = False
     decay = True
     spreading_time = 2
@@ -28,6 +28,7 @@ class SimSettings:
     seed = 42
     connect_prob_city = 0.5
     connect_prob_vil = 0.5
+    decay_param = -0.025
 
 
 def run_simulation(cfg: SimSettings):
@@ -84,7 +85,7 @@ def run_simulation(cfg: SimSettings):
                                                                        nr_spreading=spreading,
                                                                        spread_prob=cfg.spreading_prob)
         if cfg.decay:
-            cfg.spreading_prob = cfg.spreading_prob * np.exp(-0.075 * count)
+            cfg.spreading_prob = cfg.spreading_prob * np.exp(cfg.decay_param * count)
         not_interested_counts.append(not_interested)
         spreading_counts.append(spreading)
         ignorant_counts.append(ignorant)
