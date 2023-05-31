@@ -34,7 +34,7 @@ class SimSettings:
     seed = 42
     connect_prob_city = 0.5
     connect_prob_vil = 0.5
-    decay_param = -0.075
+    decay_param = -0.025
 
 
 @dataclass
