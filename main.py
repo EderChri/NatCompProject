@@ -64,7 +64,7 @@ class Experiments:
     situation4 = [1,1,0] #5 start city
     situation5 = [1,1,1] #5 start combined
     situations = [situation1,situation2,situation3,situation4,situation5]
-    situation_name = ["Start village","Start city","Multistart village","Multistart city","Multistart village and city"]
+    situation_name = ["Village","City","MultVillage","MultCity","MultVillage&City"]
 
 
 def run_simulation(config: SimSettings, plot=False):
@@ -200,7 +200,7 @@ def plot_boxplot(df,parameter_name,spreading_method_name):
     df.boxplot(column="time",by="situation")
 
     plt.title(f'Sensitivity analysis of parameter {parameter_name} with spreading method {spreading_method_name}')
-    plt.xlabel('Situation')
+    plt.xlabel('Startpoint')
     plt.ylabel('Time')
     #plt.legend()
     plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}.png")
@@ -265,32 +265,37 @@ if __name__ == '__main__':
     exp = Experiments()
     np.random.seed(cfg.seed)
 
-    for param in range(len(exp.parameters)):
-        # Run all the settings for all different numbers of starting points
-        for nr_spreading_methods in range(len(exp.spreading_method)):
-            sim_list = []
-            for situation_nr in range(len(exp.situations)): 
-                cfg.decay = exp.decay[nr_spreading_methods]
-                cfg.time_out = exp.time_out[nr_spreading_methods]
-                spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
+    singleExperiment = True
+    if singleExperiment == True:
+        run_simulation(cfg,plot=True)
+        generate_gif()
+    else:
+        for param in range(len(exp.parameters)):
+            # Run all the settings for all different numbers of starting points
+            for nr_spreading_methods in range(len(exp.spreading_method)):
+                sim_list = []
+                for situation_nr in range(len(exp.situations)): 
+                    cfg.decay = exp.decay[nr_spreading_methods]
+                    cfg.time_out = exp.time_out[nr_spreading_methods]
+                    spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
 
-                parameter = exp.parameters[param]
-                parameter_name = exp.parameter_names[param]
+                    parameter = exp.parameters[param]
+                    parameter_name = exp.parameter_names[param]
 
-                situation_name = exp.situation_name[situation_nr]
+                    situation_name = exp.situation_name[situation_nr]
 
-                print('=' * 50)
-                print(f'Situation: {situation_name}; Parameter:{parameter_name}')
+                    print('=' * 50)
+                    print(f'Situation: {situation_name}; Parameter:{parameter_name}')
 
-                #Run for combination start in cities and villages
-                cfg.num_start_points = exp.num_start_points[exp.situations[situation_nr][0]]
-                cfg.only_villages = exp.only_villages[exp.situations[situation_nr][1]]
-                cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
+                    #Run for combination start in cities and villages
+                    cfg.num_start_points = exp.num_start_points[exp.situations[situation_nr][0]]
+                    cfg.only_villages = exp.only_villages[exp.situations[situation_nr][1]]
+                    cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
 
 
-                sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
+                    sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
 
-            df = pd.DataFrame(sim_list)
-            df.to_csv(f"{parameter_name}_{spreading_method_name}.csv", index=False)
+                df = pd.DataFrame(sim_list)
+                df.to_csv(f"{parameter_name}_{spreading_method_name}.csv", index=False)
 
-            plot_boxplot(df,parameter_name,spreading_method_name)
+                plot_boxplot(df,parameter_name,spreading_method_name)
