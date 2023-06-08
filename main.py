@@ -206,6 +206,23 @@ def plot_boxplot(df,parameter_name,spreading_method_name):
     plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}.png")
     plt.close()
 
+def plot_scatterplot(df,parameter_name,spreading_method_name):
+    groups = df.groupby(['situation'])['time']
+
+    fig,ax = plt.subplots(figsize=(8,6))
+    for  i,(k,v) in enumerate(groups):
+        ax.scatter([i]*len(v), v)
+
+    ax.set_xticks(np.arange(len(groups)))
+    ax.set_xticklabels([k for k,v in groups])
+    #plt.figure(figsize=(10,6))
+    plt.title(f'Sensitivity analysis of parameter {parameter_name} with spreading method {spreading_method_name}')
+    plt.xlabel('Startpoint')
+    plt.ylabel('Time')
+    #plt.legend()
+    plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}.png")
+    plt.close()
+
 def cleanup_directory():
     """
     Function that removes all png from the img folder
@@ -298,4 +315,5 @@ if __name__ == '__main__':
                 df = pd.DataFrame(sim_list)
                 df.to_csv(f"{parameter_name}_{spreading_method_name}.csv", index=False)
 
-                plot_boxplot(df,parameter_name,spreading_method_name)
+                plot_scatterplot(df,parameter_name,spreading_method_name)
+                #plot_boxplot(df,parameter_name,spreading_method_name)
