@@ -47,10 +47,10 @@ class Experiments:
     spreading_method = [decay, time_out]
     spreading_method_names = ['decay','timeout']
 
-    spreading_prob = [0.3, 0.6, 0.9]
-    spreading_time = [0, 3, 5]
-    connect_prob_city = [0.25, 0.75, 1]
-    connect_prob_vil = [0.25, 0.75, 1]
+    spreading_prob = [0.15, 0.3, 0.6, 0.8, 0.9]
+    spreading_time = [0, 1, 2, 5, 10]
+    connect_prob_city = [0.1, 0.25, 0.5, 0.75, 1]
+    connect_prob_vil = [0.1, 0.25, 0.5, 0.75, 1]
     parameters = [spreading_prob,spreading_time,connect_prob_city,connect_prob_vil]
     parameter_names = ["spreading_prob","spreading_time","connect_prob_city","connect_prob_vil"]
 
@@ -206,7 +206,8 @@ def plot_boxplot(df,parameter_name,spreading_method_name):
     plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}.png")
     plt.close()
 
-def plot_scatterplot(df,parameter_name,spreading_method_name):
+def plot_scatterplot(df,parameter_name,spreading_method_name,situation_name):
+    df.situation = pd.Categorical(df.situation, categories=situation_name, ordered=True)
     groups = df.groupby(['situation'])['time']
 
     fig,ax = plt.subplots(figsize=(8,6))
@@ -215,7 +216,6 @@ def plot_scatterplot(df,parameter_name,spreading_method_name):
 
     ax.set_xticks(np.arange(len(groups)))
     ax.set_xticklabels([k for k,v in groups])
-    #plt.figure(figsize=(10,6))
     plt.title(f'Sensitivity analysis of parameter {parameter_name} with spreading method {spreading_method_name}')
     plt.xlabel('Startpoint')
     plt.ylabel('Time')
@@ -282,7 +282,13 @@ if __name__ == '__main__':
     exp = Experiments()
     np.random.seed(cfg.seed)
 
-    singleExperiment = True
+    #Quick test plotting one csv (put singleExperiment to True as well)
+    #test = True
+    #if test:
+    #    df = pd.read_csv('spreading_prob_decay.csv')
+    #    plot_scatterplot(df,"spreading_prob1","decay1",exp.situation_name)
+
+    singleExperiment = False
     if singleExperiment == True:
         run_simulation(cfg,plot=True)
         generate_gif()
@@ -315,5 +321,5 @@ if __name__ == '__main__':
                 df = pd.DataFrame(sim_list)
                 df.to_csv(f"{parameter_name}_{spreading_method_name}.csv", index=False)
 
-                plot_scatterplot(df,parameter_name,spreading_method_name)
+                plot_scatterplot(df,parameter_name,spreading_method_name,exp.situation_name)
                 #plot_boxplot(df,parameter_name,spreading_method_name)
