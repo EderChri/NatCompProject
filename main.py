@@ -6,6 +6,7 @@ import numpy as np
 from cityvillage import Dwelling, CityVillageGraph
 import igraph
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import imageio
 from os import listdir
 from os.path import isfile, join
@@ -36,6 +37,7 @@ class SimSettings:
     connect_prob_city = 0.5
     connect_prob_vil = 0.5
     decay_param = -0.025
+    loadSim = True
 
 
 @dataclass
@@ -221,26 +223,52 @@ def plot_boxplot(df, parameter_name, spreading_method_name):
 def plot_scatterplot(df, parameter_name, spreading_method_name, situation_name):
     """
     Function to plot a scatter plot of experiment results of a parameter variation
+    Jitters points if they are on top of each other
     :param df: dataset containing the simulation data
     :param parameter_name: parameter that was varied in experiment
     :param spreading_method_name: spreading method used in the experiment
-    :param situation_name: list of situations that where covered
+    :param situation_name: list of situations that were covered
     :return:
     """
     df.situation = pd.Categorical(df.situation, categories=situation_name, ordered=True)
-    groups = df.groupby(['situation'])['time']
+    groups = df.groupby(['situation'])
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    for i, (k, v) in enumerate(groups):
-        ax.scatter([i] * len(v), v)
+    colormap = plt.colormaps.get_cmap("tab10")
+    unique_param_values = np.sort(df[parameter_name].unique())
+
+    for i, (situation, group_data) in enumerate(groups):
+        # Save the point coordinates to know if they would be plotted on top of each other
+        point_coordinates = set()
+        for j, row in group_data.iterrows():
+            unique_index = np.argwhere(unique_param_values == row[parameter_name])[0][0]
+            color = colormap(
+                unique_index % colormap.N)
+            x = i
+            y = row['time']
+            coordinate = (x, y)
+
+            # If point already there, add jitter
+            if coordinate in point_coordinates:
+                offset = np.random.uniform(-0.1, 0.1)
+                x += offset
+
+            point_coordinates.add((x, y))
+            ax.scatter(x, y, color=color)
+
+    unique_param_values = df[parameter_name].unique()
+    legend_elements = [
+        mpatches.Patch(color=colormap(i % colormap.N), label=f'{parameter_name} = {val}')
+        for i, val in enumerate(unique_param_values)
+    ]
+    plt.legend(handles=legend_elements, loc="best", title=f"Color legend for {parameter_name}")
 
     ax.set_xticks(np.arange(len(groups)))
-    ax.set_xticklabels([k for k, v in groups])
+    ax.set_xticklabels([k[0] for k, _ in groups])
     plt.title(f'Sensitivity analysis of parameter {parameter_name} with spreading method {spreading_method_name}')
-    plt.xlabel('Startpoint')
+    plt.xlabel('Situation')
     plt.ylabel('Time')
-    plt.ylim((0,32))
-    check_create_dir("sensitivity")
+    plt.ylim((0, 32))
     plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}_scatter.png")
     plt.close()
 
@@ -326,30 +354,35 @@ if __name__ == '__main__':
             # Run all the settings for all different numbers of starting points
             for nr_spreading_methods in range(len(exp.spreading_method)):
                 sim_list = []
-                for situation_nr in range(len(exp.situations)):
-                    cfg.decay = exp.decay[nr_spreading_methods]
-                    cfg.time_out = exp.time_out[nr_spreading_methods]
-                    spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
+                if not cfg.loadSim:
+                    for situation_nr in range(len(exp.situations)):
+                        cfg.decay = exp.decay[nr_spreading_methods]
+                        cfg.time_out = exp.time_out[nr_spreading_methods]
+                        spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
 
-                    parameter = exp.parameters[param]
+                        parameter = exp.parameters[param]
+                        parameter_name = exp.parameter_names[param]
+
+                        situation_name = exp.situation_name[situation_nr]
+
+                        print('=' * 50)
+                        print(f'Situation: {situation_name}; Parameter:{parameter_name}')
+
+                        # Run for combination start in cities and villages
+                        cfg.num_start_points = exp.num_start_points[exp.situations[situation_nr][0]]
+                        cfg.only_villages = exp.only_villages[exp.situations[situation_nr][1]]
+                        cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
+
+                        sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
+
+                    df = pd.DataFrame(sim_list)
+                    check_create_dir(f"csv/{str(cfg.seed)}")
+                    df.to_csv(f"csv/{cfg.seed}/{parameter_name}_{spreading_method_name}.csv", index=False)
+
+                    plot_boxplot(df, parameter_name, spreading_method_name)
+                    plot_scatterplot(df, parameter_name, spreading_method_name, exp.situation_name)
+                else:
                     parameter_name = exp.parameter_names[param]
-
-                    situation_name = exp.situation_name[situation_nr]
-
-                    print('=' * 50)
-                    print(f'Situation: {situation_name}; Parameter:{parameter_name}')
-
-                    # Run for combination start in cities and villages
-                    cfg.num_start_points = exp.num_start_points[exp.situations[situation_nr][0]]
-                    cfg.only_villages = exp.only_villages[exp.situations[situation_nr][1]]
-                    cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
-
-                    sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
-
-                df = pd.DataFrame(sim_list)
-                check_create_dir(f"csv/{str(cfg.seed)}")
-                df.to_csv(f"csv/{cfg.seed}/{parameter_name}_{spreading_method_name}.csv", index=False)
-
-                plot_boxplot(df, parameter_name, spreading_method_name)
-                plot_scatterplot(df, parameter_name, spreading_method_name, exp.situation_name)
-
+                    spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
+                    df = pd.read_csv(f"csv/{cfg.seed}/{parameter_name}_{spreading_method_name}.csv")
+                    plot_scatterplot(df, parameter_name, spreading_method_name, exp.situation_name)
