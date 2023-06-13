@@ -15,6 +15,7 @@ import copy
 import tqdm
 import pandas as pd
 
+
 @dataclass
 class SimSettings:
     """
@@ -42,29 +43,31 @@ class Experiments:
     """
     Data class for the parameter ranges run through in the experiments
     """
-    decay = [True,False]
-    time_out = [False,True]
-    spreading_method = [decay, time_out]
-    spreading_method_names = ['decay','timeout']
 
-    spreading_prob = [0.3, 0.6, 0.9]
-    spreading_time = [0, 3, 5]
-    connect_prob_city = [0.25, 0.75, 1]
-    connect_prob_vil = [0.25, 0.75, 1]
-    parameters = [spreading_prob,spreading_time,connect_prob_city,connect_prob_vil]
-    parameter_names = ["spreading_prob","spreading_time","connect_prob_city","connect_prob_vil"]
+    singleExperiment = False
+    decay = [True, False]
+    time_out = [False, True]
+    spreading_method = [decay, time_out]
+    spreading_method_names = ['decay', 'timeout']
+
+    spreading_prob = [0.15, 0.3, 0.45, 0.6, 0.9]
+    spreading_time = [0, 1, 2, 5, 1]
+    connect_prob_city = [0.1, 0.25, 0.5, 0.75, 1]
+    connect_prob_vil = [0.1, 0.25, 0.5, 0.75, 1]
+    parameters = [spreading_prob, spreading_time, connect_prob_city, connect_prob_vil]
+    parameter_names = ["spreading_prob", "spreading_time", "connect_prob_city", "connect_prob_vil"]
 
     num_start_points = [1, 5]
     only_villages = [True, False]
     only_cities = [True, False]
-    #vector representation situation [num_start, only_vil, only_cit]
-    situation1 = [0,0,1] #1 start village
-    situation2 = [0,1,0] #1 start city
-    situation3 = [1,0,1] #5 start village
-    situation4 = [1,1,0] #5 start city
-    situation5 = [1,1,1] #5 start combined
-    situations = [situation1,situation2,situation3,situation4,situation5]
-    situation_name = ["Village","City","MultVillage","MultCity","MultVillage&City"]
+    # vector representation situation [num_start, only_vil, only_cit]
+    situation1 = [0, 0, 1]  # 1 start village
+    situation2 = [0, 1, 0]  # 1 start city
+    situation3 = [1, 0, 1]  # 5 start village
+    situation4 = [1, 1, 0]  # 5 start city
+    situation5 = [1, 1, 1]  # 5 start combined
+    situations = [situation1, situation2, situation3, situation4, situation5]
+    situation_name = ["Village", "City", "MultVillage", "MultCity", "MultVillage&City"]
 
 
 def run_simulation(config: SimSettings, plot=False):
@@ -196,15 +199,21 @@ def plot_graph(graph, number, colormap):
     plt.savefig(f"img/graph_{number}.png")
     plt.close()
 
-def plot_boxplot(df,parameter_name,spreading_method_name):
-    df.boxplot(column="time",by="situation")
+
+def plot_boxplot(df, parameter_name, spreading_method_name):
+    df.boxplot(column="time", by="situation")
 
     plt.title(f'Sensitivity analysis of parameter {parameter_name} with spreading method {spreading_method_name}')
     plt.xlabel('Startpoint')
     plt.ylabel('Time')
-    #plt.legend()
+    # plt.legend()
+    isExist = os.path.exists("sensitivity")
+    if not isExist:
+        os.makedirs("sensitivity")
+        print("The sensitivity directory is created!")
     plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}.png")
     plt.close()
+
 
 def cleanup_directory():
     """
@@ -224,7 +233,8 @@ def get_row_dict(config, time, situation):
     :param time: Int indicating the iteration
     :return: Dictionary used for pandas DataFrame generation
     """
-    row = {"time": time, "situation": situation,"spreading_prob": config.spreading_prob, "time_out": config.time_out, "decay": config.decay,
+    row = {"time": time, "situation": situation, "spreading_prob": config.spreading_prob, "time_out": config.time_out,
+           "decay": config.decay,
            "connect_prob_city": config.connect_prob_city, "connect_prob_vil": config.connect_prob_vil,
            "num_start_points": config.num_start_points, "only_cities": config.only_cities,
            "only_villages": config.only_villages, "spreading_time": config.spreading_time}
@@ -265,16 +275,15 @@ if __name__ == '__main__':
     exp = Experiments()
     np.random.seed(cfg.seed)
 
-    singleExperiment = True
-    if singleExperiment == True:
-        run_simulation(cfg,plot=True)
+    if exp.singleExperiment:
+        run_simulation(cfg, plot=True)
         generate_gif()
     else:
         for param in range(len(exp.parameters)):
             # Run all the settings for all different numbers of starting points
             for nr_spreading_methods in range(len(exp.spreading_method)):
                 sim_list = []
-                for situation_nr in range(len(exp.situations)): 
+                for situation_nr in range(len(exp.situations)):
                     cfg.decay = exp.decay[nr_spreading_methods]
                     cfg.time_out = exp.time_out[nr_spreading_methods]
                     spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
@@ -287,15 +296,14 @@ if __name__ == '__main__':
                     print('=' * 50)
                     print(f'Situation: {situation_name}; Parameter:{parameter_name}')
 
-                    #Run for combination start in cities and villages
+                    # Run for combination start in cities and villages
                     cfg.num_start_points = exp.num_start_points[exp.situations[situation_nr][0]]
                     cfg.only_villages = exp.only_villages[exp.situations[situation_nr][1]]
                     cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
-
 
                     sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
 
                 df = pd.DataFrame(sim_list)
                 df.to_csv(f"{parameter_name}_{spreading_method_name}.csv", index=False)
 
-                plot_boxplot(df,parameter_name,spreading_method_name)
+                plot_boxplot(df, parameter_name, spreading_method_name)
