@@ -32,7 +32,7 @@ class SimSettings:
     num_start_points = 1
     only_villages = True
     only_cities = False
-    seed = 42
+    seed = 60
     connect_prob_city = 0.5
     connect_prob_vil = 0.5
     decay_param = -0.025
@@ -201,38 +201,60 @@ def plot_graph(graph, number, colormap):
 
 
 def plot_boxplot(df, parameter_name, spreading_method_name):
+    """
+    Plots a boxplot of a given spreading_method
+    :param df: dataset containing the data to plot
+    :param parameter_name: name of the spreading parameter that was varied
+    :param spreading_method_name: name of the used spreading_method
+    :return:
+    """
     df.boxplot(column="time", by="situation")
 
     plt.title(f'Sensitivity analysis of parameter {parameter_name} with spreading method {spreading_method_name}')
     plt.xlabel('Startpoint')
     plt.ylabel('Time')
-    check_create_sensitivity_dir()
+    check_create_dir("sensitivity")
     plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}.png")
     plt.close()
 
-def plot_scatterplot(df,parameter_name,spreading_method_name,situation_name):
+
+def plot_scatterplot(df, parameter_name, spreading_method_name, situation_name):
+    """
+    Function to plot a scatter plot of experiment results of a parameter variation
+    :param df: dataset containing the simulation data
+    :param parameter_name: parameter that was varied in experiment
+    :param spreading_method_name: spreading method used in the experiment
+    :param situation_name: list of situations that where covered
+    :return:
+    """
     df.situation = pd.Categorical(df.situation, categories=situation_name, ordered=True)
     groups = df.groupby(['situation'])['time']
 
-    fig,ax = plt.subplots(figsize=(8,6))
-    for  i,(k,v) in enumerate(groups):
-        ax.scatter([i]*len(v), v)
+    fig, ax = plt.subplots(figsize=(8, 6))
+    for i, (k, v) in enumerate(groups):
+        ax.scatter([i] * len(v), v)
 
     ax.set_xticks(np.arange(len(groups)))
-    ax.set_xticklabels([k for k,v in groups])
+    ax.set_xticklabels([k for k, v in groups])
     plt.title(f'Sensitivity analysis of parameter {parameter_name} with spreading method {spreading_method_name}')
     plt.xlabel('Startpoint')
     plt.ylabel('Time')
-    check_create_sensitivity_dir()
-    plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}.png")
+    plt.ylim((0,32))
+    check_create_dir("sensitivity")
+    plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}_scatter.png")
     plt.close()
 
 
-def check_create_sensitivity_dir():
-    exists = os.path.exists("sensitivity")
+def check_create_dir(name):
+    """
+    Function to check whether a directory exists, and if it doesn't create it
+    :param name: name of the directory
+    :return:
+    """
+    exists = os.path.exists(name)
     if not exists:
-        os.makedirs("sensitivity")
-        print("The sensitivity directory is created!")
+        os.makedirs(name)
+        print(f"The {name} directory is created!")
 
 
 def cleanup_directory():
@@ -299,6 +321,7 @@ if __name__ == '__main__':
         run_simulation(cfg, plot=True)
         generate_gif()
     else:
+        check_create_dir(f"csv")
         for param in range(len(exp.parameters)):
             # Run all the settings for all different numbers of starting points
             for nr_spreading_methods in range(len(exp.spreading_method)):
@@ -321,10 +344,12 @@ if __name__ == '__main__':
                     cfg.only_villages = exp.only_villages[exp.situations[situation_nr][1]]
                     cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
 
-
                     sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
 
                 df = pd.DataFrame(sim_list)
-                df.to_csv(f"{parameter_name}_{spreading_method_name}.csv", index=False)
+                check_create_dir(f"csv/{str(cfg.seed)}")
+                df.to_csv(f"csv/{cfg.seed}/{parameter_name}_{spreading_method_name}.csv", index=False)
 
                 plot_boxplot(df, parameter_name, spreading_method_name)
+                plot_scatterplot(df, parameter_name, spreading_method_name, exp.situation_name)
+
