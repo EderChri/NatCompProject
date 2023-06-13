@@ -50,8 +50,8 @@ class Experiments:
     spreading_method = [decay, time_out]
     spreading_method_names = ['decay', 'timeout']
 
-    spreading_prob = [0.15, 0.3, 0.45, 0.6, 0.9]
-    spreading_time = [0, 1, 2, 5, 1]
+    spreading_prob = [0.15, 0.3, 0.6, 0.8, 0.9]
+    spreading_time = [0, 1, 2, 5, 10]
     connect_prob_city = [0.1, 0.25, 0.5, 0.75, 1]
     connect_prob_vil = [0.1, 0.25, 0.5, 0.75, 1]
     parameters = [spreading_prob, spreading_time, connect_prob_city, connect_prob_vil]
@@ -206,13 +206,33 @@ def plot_boxplot(df, parameter_name, spreading_method_name):
     plt.title(f'Sensitivity analysis of parameter {parameter_name} with spreading method {spreading_method_name}')
     plt.xlabel('Startpoint')
     plt.ylabel('Time')
-    # plt.legend()
-    isExist = os.path.exists("sensitivity")
-    if not isExist:
-        os.makedirs("sensitivity")
-        print("The sensitivity directory is created!")
+    check_create_sensitivity_dir()
     plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}.png")
     plt.close()
+
+def plot_scatterplot(df,parameter_name,spreading_method_name,situation_name):
+    df.situation = pd.Categorical(df.situation, categories=situation_name, ordered=True)
+    groups = df.groupby(['situation'])['time']
+
+    fig,ax = plt.subplots(figsize=(8,6))
+    for  i,(k,v) in enumerate(groups):
+        ax.scatter([i]*len(v), v)
+
+    ax.set_xticks(np.arange(len(groups)))
+    ax.set_xticklabels([k for k,v in groups])
+    plt.title(f'Sensitivity analysis of parameter {parameter_name} with spreading method {spreading_method_name}')
+    plt.xlabel('Startpoint')
+    plt.ylabel('Time')
+    check_create_sensitivity_dir()
+    plt.savefig(f"sensitivity/{parameter_name}_{spreading_method_name}.png")
+    plt.close()
+
+
+def check_create_sensitivity_dir():
+    exists = os.path.exists("sensitivity")
+    if not exists:
+        os.makedirs("sensitivity")
+        print("The sensitivity directory is created!")
 
 
 def cleanup_directory():
@@ -300,6 +320,7 @@ if __name__ == '__main__':
                     cfg.num_start_points = exp.num_start_points[exp.situations[situation_nr][0]]
                     cfg.only_villages = exp.only_villages[exp.situations[situation_nr][1]]
                     cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
+
 
                     sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
 
