@@ -37,7 +37,8 @@ class SimSettings:
     connect_prob_city = 0.5
     connect_prob_vil = 0.5
     decay_param = -0.025
-    loadSim = True
+    loadSim = False
+    runs = 2
 
 
 @dataclass
@@ -295,6 +296,16 @@ def cleanup_directory():
     for f in filelist:
         os.remove(f)
 
+    Path("sensitivity").mkdir(parents=True, exist_ok=True)
+    filelist = glob.glob(os.path.join('sensitivity', "*.png"))
+    for f in filelist:
+        os.remove(f)
+
+    Path("csv").mkdir(parents=True, exist_ok=True)
+    filelist = glob.glob(os.path.join('csv', "*.csv"))
+    for f in filelist:
+        os.remove(f)
+
 
 def get_row_dict(config, time, situation):
     """
@@ -354,33 +365,42 @@ if __name__ == '__main__':
             # Run all the settings for all different numbers of starting points
             for nr_spreading_methods in range(len(exp.spreading_method)):
                 sim_list = []
+                if cfg.runs != 1:
+                    plotting = False
+                else:
+                    plotting = True
                 if not cfg.loadSim:
-                    for situation_nr in range(len(exp.situations)):
-                        cfg.decay = exp.decay[nr_spreading_methods]
-                        cfg.time_out = exp.time_out[nr_spreading_methods]
-                        spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
+                    for run in range(cfg.runs):
+                        print(run)
+                        for situation_nr in range(len(exp.situations)):
+                            cfg.decay = exp.decay[nr_spreading_methods]
+                            cfg.time_out = exp.time_out[nr_spreading_methods]
+                            spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
 
-                        parameter = exp.parameters[param]
-                        parameter_name = exp.parameter_names[param]
+                            parameter = exp.parameters[param]
+                            parameter_name = exp.parameter_names[param]
 
-                        situation_name = exp.situation_name[situation_nr]
+                            situation_name = exp.situation_name[situation_nr]
 
-                        print('=' * 50)
-                        print(f'Situation: {situation_name}; Parameter:{parameter_name}')
+                            print('=' * 50)
+                            print(f'Situation: {situation_name}; Parameter:{parameter_name}')
 
-                        # Run for combination start in cities and villages
-                        cfg.num_start_points = exp.num_start_points[exp.situations[situation_nr][0]]
-                        cfg.only_villages = exp.only_villages[exp.situations[situation_nr][1]]
-                        cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
+                            # Run for combination start in cities and villages
+                            cfg.num_start_points = exp.num_start_points[exp.situations[situation_nr][0]]
+                            cfg.only_villages = exp.only_villages[exp.situations[situation_nr][1]]
+                            cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
 
-                        sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
+                            sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
+                            
+                            if plotting:
+                                df = pd.DataFrame(sim_list)
+                                plot_boxplot(df, parameter_name, spreading_method_name)
+                                plot_scatterplot(df, parameter_name, spreading_method_name, exp.situation_name)
 
                     df = pd.DataFrame(sim_list)
                     check_create_dir(f"csv/{str(cfg.seed)}")
                     df.to_csv(f"csv/{cfg.seed}/{parameter_name}_{spreading_method_name}.csv", index=False)
-
-                    plot_boxplot(df, parameter_name, spreading_method_name)
-                    plot_scatterplot(df, parameter_name, spreading_method_name, exp.situation_name)
+           
                 else:
                     parameter_name = exp.parameter_names[param]
                     spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
