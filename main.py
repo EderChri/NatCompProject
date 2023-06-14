@@ -38,7 +38,7 @@ class SimSettings:
     connect_prob_vil = 0.5
     decay_param = -0.025
     loadSim = False
-    runs = 2
+    runs = 15
 
 
 @dataclass
@@ -286,7 +286,7 @@ def check_create_dir(name):
         print(f"The {name} directory is created!")
 
 
-def cleanup_directory():
+def cleanup_directory(cfg):
     """
     Function that removes all png from the img folder
     :return:
@@ -302,7 +302,7 @@ def cleanup_directory():
         os.remove(f)
 
     Path("csv").mkdir(parents=True, exist_ok=True)
-    filelist = glob.glob(os.path.join('csv', "*.csv"))
+    filelist = glob.glob(os.path.join(f"csv/{str(cfg.seed)}", "*.csv"))
     for f in filelist:
         os.remove(f)
 
@@ -351,9 +351,9 @@ def print_header(header):
 
 if __name__ == '__main__':
     sim_list = []
-    cleanup_directory()
     cfg = SimSettings()
     exp = Experiments()
+    cleanup_directory(cfg)
     np.random.seed(cfg.seed)
 
     if exp.singleExperiment:
