@@ -1,0 +1,95 @@
+---
+title: "Statistical analysis"
+output: html_document
+date: "2023-06-15"
+---
+
+WARNING: Make sure that this file is in the same folder as the csv files you want to run the test on. Those csv files already need to be extracted from the zip file.
+```{r}
+library(ggplot2)
+library(gridExtra)
+library(FSA)
+library(xtable)
+library(knitr)
+library(dplyr)
+```
+
+Load all the data and merge it.
+
+```{r setup, include=FALSE}
+csv_files <- list.files(pattern = "\\.csv$")
+data_frames <- list()
+for (file in csv_files) {
+  data_frames[[file]] <- read.csv(file)
+}
+merged_df <- do.call(rbind, data_frames)
+df_list<- split(merged_df, merged_df$time_out)
+df_time_out <- df_list$True
+df_decay <- df_list$False
+```
+
+Split the data according to situation and generate a QQ-plot for each level.
+
+```{r}
+plot_qqplots <- function(df){
+  df_split <- split(df, df$situation)
+  
+  qq_plots <- lapply(df_split, function(sub_df) {
+    ggplot(sub_df, aes(sample = time)) +
+      stat_qq() +
+      labs(title = unique(sub_df$situation))
+  })
+  grid.arrange(grobs = qq_plots, ncol = 2)
+}
+plot_qqplots(df_time_out)
+plot_qqplots(df_decay)
+```
+The data is not normally distributed, therefore perform a Kruskal-Wallis test to determine whether groups there is statistically signficficant difference.
+
+```{r}
+# Perform the Kruskal-Wallis test on the 'time' variable, grouped by 'situation'
+kw_test_decay <- kruskal.test(time ~ situation, data = df_decay)
+
+print(kw_test_decay)
+```
+
+
+```{r}
+kw_test_time_out <- kruskal.test(time ~ situation, data = df_time_out)
+
+print(kw_test_time_out)
+```
+
+$H_0$ assuming no difference can be rejected, now perform a Dunn's post-hoc test to figure out difference between each situation pair
+
+```{r}
+# Perform Dunn's post-hoc test
+dunn_results_decay <- dunnTest(time ~ situation, data = df_decay, method = "holm") 
+
+print(dunn_results_decay)
+```
+```{r}
+# Perform Dunn's post-hoc test
+dunn_results_time_out <- dunnTest(time ~ situation, data = df_time_out, method = "holm") 
+
+print(dunn_results_time_out)
+```
+Generate latex table for report
+
+```{r}
+rounded_df_decay <- dunn_results_decay$res%>%
+  mutate(across(where(is.numeric), .fn = function(x) round(x, digits=6)))
+latex_table_decay <- kable(rounded_df_decay, format = "latex", booktabs = T)
+writeLines(latex_table_decay, "decay.tex")
+```
+
+
+```{r}
+rounded_df_time_out <- dunn_results_time_out$res%>%
+  mutate(across(where(is.numeric), .fn = function(x) round(x, digits=6)))
+latex_table_time_out <- kable(rounded_df_time_out, format = "latex", booktabs = T)
+writeLines(latex_table_time_out, "time_out.tex")
+```
+
+
+
