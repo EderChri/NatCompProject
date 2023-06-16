@@ -23,22 +23,22 @@ class SimSettings:
     Data class used for the general settings of the simulation
     Here the baseline parameter should be set
     """
-    city_size = 40
-    village_size = 10
-    nr_villages = 5
-    spreading_prob = .8
-    time_out = False
-    decay = True
-    spreading_time = 2
-    num_start_points = 1
-    only_villages = True
-    only_cities = False
-    seed = 60
-    connect_prob_city = 0.5
-    connect_prob_vil = 0.5
-    decay_param = -0.025
-    loadSim = False
-    runs = 15
+    city_size = 40  # Number of nodes in the city
+    village_size = 10  # Number of nodes in the villages
+    nr_villages = 5  # Number of villages
+    spreading_prob = .8  # Baseline spreading probability
+    time_out = False  # Set to True to use the time_out method for spreading
+    decay = True  # Set to True to use the decay method for spreading
+    spreading_time = 2  # Only relevant if time_out set to True, number of iterations a node spreads information
+    num_start_points = 1  # Number of starting points (baseline)
+    only_villages = True  # If True, starting points are only spawned in villages
+    only_cities = False  # If True, starting points are only spawned in the city
+    seed = 60  # random seed for simulation
+    connect_prob_city = 0.5  # Probability of city nodes connected with each other
+    connect_prob_vil = 0.5  # Probability of villages nodes connected with each other
+    decay_param = -0.025  # Parameter for the decrease of the spreading_probability, only used when decay True
+    loadSim = False  # If True, just load the already calculated data and produce plots
+    runs = 1  # Number of runs to perform, if > 1 plotting will be disabled
 
 
 @dataclass
@@ -47,7 +47,7 @@ class Experiments:
     Data class for the parameter ranges run through in the experiments
     """
 
-    singleExperiment = False
+    singleExperiment = False  # If True only run one experiment
     decay = [True, False]
     time_out = [False, True]
     spreading_method = [decay, time_out]
@@ -353,7 +353,8 @@ if __name__ == '__main__':
     sim_list = []
     cfg = SimSettings()
     exp = Experiments()
-    cleanup_directory(cfg)
+    if not cfg.loadSim:
+        cleanup_directory(cfg)
     np.random.seed(cfg.seed)
 
     if exp.singleExperiment:
@@ -391,7 +392,7 @@ if __name__ == '__main__':
                             cfg.only_cities = exp.only_cities[exp.situations[situation_nr][2]]
 
                             sim_list = sim_wrapper(cfg, sim_list, parameter, parameter_name, situation_name)
-                            
+
                             if plotting:
                                 df = pd.DataFrame(sim_list)
                                 plot_boxplot(df, parameter_name, spreading_method_name)
@@ -400,7 +401,7 @@ if __name__ == '__main__':
                     df = pd.DataFrame(sim_list)
                     check_create_dir(f"csv/{str(cfg.seed)}")
                     df.to_csv(f"csv/{cfg.seed}/{parameter_name}_{spreading_method_name}.csv", index=False)
-           
+
                 else:
                     parameter_name = exp.parameter_names[param]
                     spreading_method_name = exp.spreading_method_names[nr_spreading_methods]
