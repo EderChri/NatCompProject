@@ -5,6 +5,7 @@ date: "2023-06-15"
 ---
 
 WARNING: Make sure that this file is in the same folder as the csv files you want to run the test on. Those csv files already need to be extracted from the zip file.
+Furthermore it is assumed that R version >= 4 is used and the following libraries are installed:
 ```{r}
 library(ggplot2)
 library(gridExtra)
